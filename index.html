@@ -52,6 +52,13 @@
     button:hover {
       background-color: #0056b3;
     }
+    #clearBtn {
+      background-color: #dc3545;
+      margin-top: 0.2rem;
+    }
+    #clearBtn:hover {
+      background-color: #b02a37;
+    }
     #tableInput {
       width: 100%;
       border-collapse: collapse;
@@ -93,6 +100,33 @@
     #copyBtn:hover {
       background-color: #1e7e34;
     }
+    #livePreview {
+      border: 1px solid #ccc;
+      background: white;
+      padding: 0.5rem;
+      margin-top: 1rem;
+      max-height: 300px;
+      overflow-y: auto;
+      border-radius: 5px;
+      text-align: left;
+      box-sizing: border-box;
+      max-width: 300px;
+      width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+
+      white-space: normal;     /* wrap lines normally */
+      word-break: break-word;  /* break large words to fit */
+    }
+    #livePreview table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    #livePreview th, #livePreview td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: center;
+    }
     .footer {
       text-align: center;
       font-size: 0.9rem;
@@ -121,6 +155,7 @@
     <input type="number" id="cols" min="1" max="10" value="3" />
 
     <button id="createTableBtn">টেবুল সৃষ্টি কৰক</button>
+    <button id="clearBtn">ক্লিয়াৰ কৰক</button>
 
     <form id="tableForm" style="display:none;">
       <table id="tableInput"></table>
@@ -131,6 +166,8 @@
       <label for="wikiMarkup" style="width: 100%;">ৱিকিটেবুল মাৰ্কআপ সৃষ্টি কৰা হৈছে:</label>
       <textarea id="wikiMarkup" readonly></textarea>
       <button id="copyBtn">কপি কৰক</button>
+
+      <div id="livePreview" style="display:none;"></div>
     </div>
   </div>
 
@@ -142,11 +179,13 @@
     const rowsInput = document.getElementById('rows');
     const colsInput = document.getElementById('cols');
     const createTableBtn = document.getElementById('createTableBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const tableForm = document.getElementById('tableForm');
     const tableInput = document.getElementById('tableInput');
     const generateBtn = document.getElementById('generateBtn');
     const wikiMarkup = document.getElementById('wikiMarkup');
     const copyBtn = document.getElementById('copyBtn');
+    const livePreview = document.getElementById('livePreview');
 
     createTableBtn.addEventListener('click', () => {
       const newRows = parseInt(rowsInput.value, 10);
@@ -199,14 +238,21 @@
       tableInput.appendChild(tbody);
 
       tableForm.style.display = 'block';
+      livePreview.style.display = 'none';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      tableInput.innerHTML = '';
+      tableForm.style.display = 'none';
+      wikiMarkup.value = '';
+      livePreview.innerHTML = '';
+      livePreview.style.display = 'none';
     });
 
     generateBtn.addEventListener('click', () => {
       let markup = '{| class="wikitable"\n|-\n';
-      // Headers
       const headers = tableInput.querySelectorAll('thead th input');
       markup += '! ' + Array.from(headers).map(input => input.value.trim() || ' ').join(' !! ') + '\n';
-      // Rows
       const bodyRows = tableInput.querySelectorAll('tbody tr');
       bodyRows.forEach(row => {
         markup += '|-\n';
@@ -215,6 +261,26 @@
       });
       markup += '|}';
       wikiMarkup.value = markup;
+
+      livePreview.style.display = 'block';
+
+      let html = '<table style="border-collapse: collapse; width: 100%;">';
+      html += '<thead><tr>';
+      headers.forEach(input => {
+        html += `<th style="border: 1px solid #ddd; padding: 6px; text-align: center;">${input.value.trim() || '&nbsp;'}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+      bodyRows.forEach(row => {
+        html += '<tr>';
+        const cells = row.querySelectorAll('td input');
+        cells.forEach(input => {
+          html += `<td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${input.value.trim() || '&nbsp;'}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+
+      livePreview.innerHTML = html;
     });
 
     copyBtn.addEventListener('click', () => {
@@ -229,5 +295,4 @@
     });
   </script>
 </body>
-  </html>
-  
+</html>
