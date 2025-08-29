@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ৱিকিটেবুল জেনেৰেটৰ</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 1rem;
+      background: #f9f9f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+      flex-grow: 1;
+      text-align: center;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+      font-weight: bold;
+    }
+    input[type=number], button {
+      width: 100%;
+      max-width: 300px;
+      padding: 0.6rem;
+      font-size: 1rem;
+      margin: 0.5rem auto;
+      display: block;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #007bff;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #tableInput {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    #tableInput td, #tableInput th {
+      border: 1px solid #ddd;
+      padding: 0.3rem;
+      text-align: center;
+    }
+    #tableInput input[type=text] {
+      width: 100%;
+    }
+    .markup-wrapper {
+      max-width: 300px;
+      width: 100%;
+      margin: 0 auto 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    #wikiMarkup {
+      font-family: monospace;
+      min-height: 150px;
+      width: 100%;
+      white-space: pre-wrap;
+      background: #f1f1f1;
+      padding: 0.7rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    #copyBtn {
+      background-color: #28a745;
+      color: white;
+    }
+    #copyBtn:hover {
+      background-color: #1e7e34;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+      padding: 1rem;
+      margin-top: auto;
+    }
+    @media (max-width: 500px) {
+      input[type=number], button {
+        max-width: 100%;
+      }
+      .markup-wrapper {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ৱিকিটেবুল জেনেৰেটৰ</h1>
+
+    <label for="rows">শাৰী:</label>
+    <input type="number" id="rows" min="1" max="20" value="3" />
+
+    <label for="cols">স্তম্ভ:</label>
+    <input type="number" id="cols" min="1" max="10" value="3" />
+
+    <button id="createTableBtn">টেবুল সৃষ্টি কৰক</button>
+
+    <form id="tableForm" style="display:none;">
+      <table id="tableInput"></table>
+      <button type="button" id="generateBtn">ৱিকিটেবুল সৃষ্টি কৰক</button>
+    </form>
+
+    <div id="markupWrapper" class="markup-wrapper">
+      <label for="wikiMarkup" style="width: 100%;">ৱিকিটেবুল মাৰ্কআপ সৃষ্টি কৰা হৈছে:</label>
+      <textarea id="wikiMarkup" readonly></textarea>
+      <button id="copyBtn">কপি কৰক</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    জয় আই অসম ❤️
+  </div>
+
+  <script>
+    const rowsInput = document.getElementById('rows');
+    const colsInput = document.getElementById('cols');
+    const createTableBtn = document.getElementById('createTableBtn');
+    const tableForm = document.getElementById('tableForm');
+    const tableInput = document.getElementById('tableInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const wikiMarkup = document.getElementById('wikiMarkup');
+    const copyBtn = document.getElementById('copyBtn');
+
+    createTableBtn.addEventListener('click', () => {
+      const newRows = parseInt(rowsInput.value, 10);
+      const newCols = parseInt(colsInput.value, 10);
+
+      if (!newRows || !newCols || newRows < 1 || newCols < 1 || newRows > 20 || newCols > 10) {
+        alert('অনুগ্ৰহ কৰি বৈধ শাৰী (1-20) আৰু স্তম্ভ (1-10) সুমুৱাওক।');
+        return;
+      }
+
+      const existingData = [];
+      tableInput.querySelectorAll('tr').forEach((row) => {
+        const rowData = [];
+        row.querySelectorAll('input').forEach((inp) => rowData.push(inp.value));
+        existingData.push(rowData);
+      });
+
+      tableInput.innerHTML = '';
+
+      // Header
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      for (let c = 0; c < newCols; c++) {
+        const th = document.createElement('th');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `হেডাৰ ${c + 1}`;
+        input.value = (existingData[0] && existingData[0][c]) || '';
+        th.appendChild(input);
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+      tableInput.appendChild(thead);
+
+      // Body
+      const tbody = document.createElement('tbody');
+      for (let r = 1; r < newRows; r++) {
+        const tr = document.createElement('tr');
+        for (let c = 0; c < newCols; c++) {
+          const td = document.createElement('td');
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = `শাৰী ${r} স্তম্ভ ${c + 1}`;
+          input.value = (existingData[r] && existingData[r][c]) || '';
+          td.appendChild(input);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      tableInput.appendChild(tbody);
+
+      tableForm.style.display = 'block';
+    });
+
+    generateBtn.addEventListener('click', () => {
+      let markup = '{| class="wikitable"\n|-\n';
+      // Headers
+      const headers = tableInput.querySelectorAll('thead th input');
+      markup += '! ' + Array.from(headers).map(input => input.value.trim() || ' ').join(' !! ') + '\n';
+      // Rows
+      const bodyRows = tableInput.querySelectorAll('tbody tr');
+      bodyRows.forEach(row => {
+        markup += '|-\n';
+        const cells = row.querySelectorAll('td input');
+        markup += '| ' + Array.from(cells).map(input => input.value.trim() || ' ').join(' || ') + '\n';
+      });
+      markup += '|}';
+      wikiMarkup.value = markup;
+    });
+
+    copyBtn.addEventListener('click', () => {
+      const text = wikiMarkup.value;
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.textContent = 'কপি কৰা হৈছে!';
+          setTimeout(() => (copyBtn.textContent = 'কপি কৰক'), 2000);
+        });
+      }
+    });
+  </script>
+</body>
+  </html>
+  
